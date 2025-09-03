@@ -1,15 +1,16 @@
 import AppError from "./app-error";
 
-type ValidationRule = {
+export type ValidationRule = {
   minLength?: number;
   maxLength?: number;
   regex?: RegExp;
   required?: boolean;
   min?: number;
   max?: number;
+  custom?: (value: any, data: Record<string, any>) => void;
 };
 
-type ValidationSchema = Record<string, ValidationRule>;
+export type ValidationSchema = Record<string, ValidationRule>;
 
 export const validateInput = (
   data: Record<string, any>,
@@ -63,13 +64,9 @@ export const validateInput = (
       }
     }
 
+    if (rules.custom) {
+      rules.custom(value, data);
+    }
   }
 };
 
-export const userValidationSchema = {
-  name: { required: true, minLength: 2, maxLength: 50 },
-  email: { required: true, regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
-  password: { required: true, minLength: 8 },
-  phone: { regex: /^\d{10,15}$/ }, // optional
-  signupMethod: { required: true },
-};
