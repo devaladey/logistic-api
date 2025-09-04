@@ -15,14 +15,14 @@ datasource db {
 }
 
 model User {
-  id                 String       @id @default(uuid())
+  id                 String         @id @default(uuid())
   name               String
   signupMethod       SignupMethod
-  email              String? @unique
-  phone              String? @unique
+  email              String?        @unique
+  phone              String?        @unique
   passwordHash       String?
-  isActive           Boolean      @default(true)
-  isVerified         Boolean      @default(false)
+  isActive           Boolean        @default(true)
+  isVerified         Boolean        @default(false)
   profile            Profile?
   roles              UserRole[]
   driver             Driver?
@@ -30,12 +30,29 @@ model User {
   admin              Admin?
   googleId           String?
   facebookId         String?
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   deletedAt          DateTime?
   passwordChangedAt  DateTime?
   jwtIssuedAt        DateTime?
   passwordResetToken String?
+  refreshToken       RefreshToken[]
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  revoked    Boolean  @default(false)
+  device     String? // e.g. "iPhone 14 Pro", "Samsung Galaxy S22", "Web Chrome"
+  ipAddress  String? // optional: capture IP at login
+  userAgent  String // optional: capture browser/device info
+  appVersion String?
+
+  @@unique([userId, userAgent])
 }
 
 model Profile {

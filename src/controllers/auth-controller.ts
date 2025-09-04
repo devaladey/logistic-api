@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
@@ -29,6 +30,7 @@ export const signUp = catchAsync(async (req, res, next) => {
 });
 
 export const login = catchAsync(async (req, res, next) => {
+  // This is password verification
   const { phone, password } = req.body;
   if (!phone || !password) {
     return next(new AppError("Please provide phone and password", 400));
@@ -47,8 +49,41 @@ export const login = catchAsync(async (req, res, next) => {
     return next(new AppError("Phone number or password is incorrect", 400));
   }
 
+  // OTP verification loading
+
+
+
+
+
   const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
     expiresIn: "90d",
+  });
+
+  const newRefreshToken = crypto.randomBytes(16).toString("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(newRefreshToken)
+    .digest("hex");
+
+  const refreshToken = await prisma.refreshToken.upsert({
+    where: {
+      userId_userAgent: { userId: user.id, userAgent: req.headers['user-agent'] || 'unknown' },
+    },
+    update: {
+      token: hashedToken,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      ipAddress: req.ip,
+      appVersion: req.body.appVersion || null,
+    },
+    create: {
+      token: hashedToken,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      ipAddress: req.ip,
+      device: req.body.device,
+      appVersion: req.body.appVersion || null,
+      userId: user.id,
+      userAgent: req.headers['user-agent'] || 'unknown',
+    },
   });
 
   const updatedUser = await prisma.user.update({
@@ -61,7 +96,11 @@ export const login = catchAsync(async (req, res, next) => {
   });
 
   sendSuccess(res, {
-    data: { token, updatedUser },
+    data: {
+      token,
+      updatedUser,
+      refreshToken: newRefreshToken,
+    },
     message: "Login Successful",
   });
 });
