@@ -69,7 +69,7 @@ export const errorController = (
   error.message = err.message;
   error.statusCode = err instanceof AppError ? err.statusCode : 500;
 
-  console.log("This is the error: ", error);
+  // console.log("This is the error: ", error);
 
   if ((err as Prisma.PrismaClientKnownRequestError)?.code === "P2002")
     error = handleDuplicateError(err);

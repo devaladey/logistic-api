@@ -1,4 +1,4 @@
-import AppError from "./app-error";
+import AppError from "../utils/app-error";
 
 export type ValidationRule = {
   minLength?: number;

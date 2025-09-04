@@ -1,3 +1,7 @@
+import dotenv from "dotenv"
+
+dotenv.config({path: "./../"});
+
 import express from 'express';
 import { appRouter } from './routes/app-router';
 import { errorController } from './controllers/error-controller';
