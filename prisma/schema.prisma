@@ -15,28 +15,30 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(uuid())
-  name               String
-  signupMethod       SignupMethod
-  email              String?        @unique
-  phone              String?        @unique
-  passwordHash       String?
-  isActive           Boolean        @default(true)
-  isVerified         Boolean        @default(false)
-  profile            Profile?
-  roles              UserRole[]
-  driver             Driver?
-  customer           Customer?
-  admin              Admin?
-  googleId           String?
-  facebookId         String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  deletedAt          DateTime?
-  passwordChangedAt  DateTime?
-  jwtIssuedAt        DateTime?
-  passwordResetToken String?
-  refreshToken       RefreshToken[]
+  id                          String         @id @default(uuid())
+  name                        String
+  signupMethod                SignupMethod
+  email                       String?        @unique
+  phone                       String?        @unique
+  passwordHash                String?
+  isActive                    Boolean        @default(true)
+  isVerified                  Boolean        @default(false)
+  profile                     Profile?
+  roles                       UserRole[]
+  driver                      Driver?
+  customer                    Customer?
+  admin                       Admin?
+  googleId                    String?
+  facebookId                  String?
+  createdAt                   DateTime       @default(now())
+  updatedAt                   DateTime       @updatedAt
+  deletedAt                   DateTime?
+  passwordChangedAt           DateTime?
+  jwtIssuedAt                 DateTime?
+  passwordResetToken          String?
+  passwordResetTokenExpiresIn DateTime?
+  refreshToken                RefreshToken[]
+  otpToken                    OtpToken[]
 }
 
 model RefreshToken {
@@ -53,6 +55,19 @@ model RefreshToken {
   appVersion String?
 
   @@unique([userId, userAgent])
+}
+
+model OtpToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  reason    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  expiresAt DateTime
+  token     String   
+
+  @@unique([userId, reason])
 }
 
 model Profile {

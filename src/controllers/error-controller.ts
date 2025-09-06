@@ -53,9 +53,10 @@ const handleValidationError = (err: any) => {
 };
 
 const handleNotFoundError = (err: any) => {
-  // const modelName = err?.meta?.modelName || "Record";
-  const reason = err?.meta?.cause || "Record not found";
-  return new AppError(`${reason}`, 404);
+  const modelName = err?.meta?.modelName || "Record";
+  // console.log(err);
+  // const reason = err?.meta?.cause || "Record not found";
+  return new AppError(`${modelName} not found`, 404);
 };
 
 export const errorController = (

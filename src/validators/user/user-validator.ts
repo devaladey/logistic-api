@@ -1,8 +1,7 @@
 import AppError from "../../utils/app-error";
 
-export const signupValidateSchema = {
-  name: { required: true, minLength: 2, maxLength: 50 },
-  email: { required: true, regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+
+export const passwordValidateSchema = {
   password: { required: true, minLength: 8 },
   confirmPassword: {
     custom: (val: any, data: Record<string, any>) => {
@@ -11,9 +10,17 @@ export const signupValidateSchema = {
       }
     },
   },
+};
+
+export const signupValidateSchema = {
+  name: { required: true, minLength: 2, maxLength: 50 },
+  email: { required: true, regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   phone: { required: true, regex: /^\d{10,15}$/ }, // optional
   signupMethod: { required: true },
+  ...passwordValidateSchema,
 };
+
+
 
 export const userValidationSchema = {
   name: { required: true, minLength: 2, maxLength: 50 },
