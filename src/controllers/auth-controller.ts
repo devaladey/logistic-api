@@ -10,6 +10,7 @@ import {
   passwordValidateSchema,
   signupValidateSchema,
 } from "../validators/user/user-validator";
+import { NextFunction, Request, Response } from "express";
 
 export const signUp = catchAsync(async (req, res, next) => {
   validateInput(req.body, signupValidateSchema);
@@ -185,7 +186,7 @@ export const resetPasword = catchAsync(async (req, res, next) => {
   });
 });
 
-export const protect = catchAsync(async (req, res, next) => {
+export const protect = catchAsync(async (req: Request, res, next) => {
   let token = "";
   if (
     req.headers.authorization &&
@@ -203,22 +204,45 @@ export const protect = catchAsync(async (req, res, next) => {
     process.env.JWT_SECRET as string
   ) as JwtPayload;
 
-  console.log(decoded);
-
   const user = await prisma.user.findUnique({
     where: {
       id: decoded?.id,
     },
+    include: {
+      admin: true,
+      customer: true,
+      driver: true,
+      profile: true
+    }
   });
 
   if (!user) {
     return next(new AppError("Invalid token or user does not exist", 401));
   }
 
-  if((user.passwordChangedAt)&& (new Date(user.passwordChangedAt).getTime() < (decoded.iat || 0))) {
-    return next(new AppError("User recently changed password, Login again!", 401));
+  if (
+    user.passwordChangedAt &&
+    parseInt(`${new Date(user.passwordChangedAt).getTime() / 1000}`) >
+      (decoded.iat || 0)
+  ) {
+    return next(
+      new AppError("User recently changed password, Login again!", 401)
+    );
   }
 
+  if (
+    user.jwtIssuedAt &&
+    parseInt(`${new Date(user.jwtIssuedAt).getTime() / 1000}`) >
+      (decoded.iat || 0)
+  ) {
+    return next(new AppError("User recently required a new token", 401));
+  }
 
   next();
 });
+
+export const restrictTo = () => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    next();
+  };
+};

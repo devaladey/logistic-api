@@ -1,7 +1,7 @@
 import { Response } from "express";
 
 type SuccessResponse<T> = {
-  data: T;
+  data?: T;
   message?: string;
   code?: number;
 };
