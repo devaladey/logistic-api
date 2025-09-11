@@ -2,11 +2,15 @@
   "name": "logistic-app-backend",
   "version": "1.0.0",
   "main": "server.js",
+  "prisma": {
+    "seed": "ts-node prisma/seeders/index.ts"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "seed": "prisma db seed"
   },
   "keywords": [],
   "author": "",

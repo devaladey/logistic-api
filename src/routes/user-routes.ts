@@ -1,18 +1,21 @@
 import express from "express";
 import { deleteUser, getUsers } from "../controllers/user-controller";
-import { protect } from "../controllers/auth-controller";
+import { protect, restrictTo } from "../controllers/auth-controller";
 import {
   createProfile,
   deleteProfile,
   getProfile,
   updateProfile,
 } from "../controllers/profile-controller";
+import { permissionsObject } from "../constants/permissions";
 
 const router = express.Router();
 
 router.use(protect);
 
-router.route("/").get(getUsers);
+router.route("/").get(
+  restrictTo(permissionsObject.customer_profile_view), 
+  getUsers);
 
 router
   .route("/:id/profile")

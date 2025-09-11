@@ -212,8 +212,21 @@ export const protect = catchAsync(async (req: Request, res, next) => {
       admin: true,
       customer: true,
       driver: true,
-      profile: true
-    }
+      profile: true,
+      roles: {
+        include: {
+          role: {
+            include: {
+              permissions: {
+                include: {
+                  permission: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!user) {
@@ -238,11 +251,38 @@ export const protect = catchAsync(async (req: Request, res, next) => {
     return next(new AppError("User recently required a new token", 401));
   }
 
+  req.body.protectedObject = user;
+
+  // req.user = user;
+
   next();
 });
 
-export const restrictTo = () => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const restrictTo = (requiredPermissions: string | string[]) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const grantedPermissions: string[] = [];
+    req.body?.protectedObject?.roles?.forEach((el: any) => {
+      el?.role?.permissions?.forEach(
+        (el: { permission: { key: string; name: string } }) => {
+          grantedPermissions.push(el?.permission?.key);
+        }
+      );
+    });
+
+
+    const restrictedPermission = Array.isArray(requiredPermissions)
+      ? requiredPermissions
+      : [requiredPermissions];
+
+    if (!restrictedPermission.some((el) => grantedPermissions.includes(el))) {
+      return next(
+        new AppError(
+          "You do not have the permission to access this route.",
+          403
+        )
+      );
+    }
+
     next();
   };
 };

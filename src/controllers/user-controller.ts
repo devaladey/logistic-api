@@ -3,6 +3,7 @@ import { catchAsync } from "../utils/catch-async";
 import { sendSuccess } from "../utils/response";
 
 export const getUsers = catchAsync(async (req, res, next) => {
+
   const users = await prisma.user.findMany();
   sendSuccess(res, {
     message: "Users Fetched Succesfully",

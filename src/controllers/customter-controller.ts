@@ -1,7 +1,9 @@
+import { Request } from "express";
 import { prisma } from "../lib/prisma";
 import AppError from "../utils/app-error";
 import { catchAsync } from "../utils/catch-async";
 import { sendSuccess } from "../utils/response";
+import { Rolekey } from "../constants/roles";
 
 export const getCustomers = catchAsync(async (req, res, next) => {
   const customers = await prisma.customer.findMany();
@@ -35,7 +37,14 @@ export const getCustomer = catchAsync(async (req, res, next) => {
 export const createCustomer = catchAsync(async (req, res, next) => {
   const customer = await prisma.customer.create({
     data: {
-      userId: req.body.userId,
+      userId: req.body.protectedObject.id,
+    },
+  });
+
+  await prisma.userRole.create({
+    data: {
+      user: { connect: { id: req.body.protectedObject.id } },
+      role: { connect: { name: Rolekey.CUSTOMER } },
     },
   });
 
@@ -60,9 +69,25 @@ export const updateCustomer = catchAsync(async (req, res, next) => {
 });
 
 export const deleteCustomer = catchAsync(async (req, res, next) => {
+  if (!req.body.protectedObject?.customer?.id) {
+    return next(new AppError("You do not have a customer account", 400));
+  }
+
   await prisma.customer.delete({
     where: {
-      id: req.params.id,
+      id: req.body.protectedObject?.customer?.id,
+    },
+  });
+
+  await prisma.userRole.delete({
+    where: {
+      userId_roleId: {
+        roleId: req.body.protectedObject?.roles?.find(
+          (role: { role: { name: string } }) =>
+            role.role.name === Rolekey.CUSTOMER
+        )?.roleId,
+        userId: req.body.protectedObject?.id,
+      },
     },
   });
 

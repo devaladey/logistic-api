@@ -65,7 +65,7 @@ model OtpToken {
   createdAt DateTime  @default(now())
   updatedAt DateTime?
   expiresAt DateTime
-  token     String   
+  token     String
 
   @@unique([userId, reason])
 }
@@ -114,7 +114,8 @@ model UserRole {
 
 model Permission {
   id          String           @id @default(uuid())
-  name        String           @unique
+  key         String           @unique
+  name        String
   description String?
   module      String
   roles       RolePermission[]

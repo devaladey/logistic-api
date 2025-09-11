@@ -1,3 +1,4 @@
+import { Rolekey } from "../constants/roles";
 import { prisma } from "../lib/prisma";
 import AppError from "../utils/app-error";
 import { catchAsync } from "../utils/catch-async";
@@ -35,7 +36,14 @@ export const getDriver = catchAsync(async (req, res, next) => {
 export const createDriver = catchAsync(async (req, res, next) => {
   const driver = await prisma.driver.create({
     data: {
-      userId: req.body.userId,
+      userId: req.body.protectedObject?.id,
+    },
+  });
+
+  await prisma.userRole.create({
+    data: {
+      user: { connect: { id: req.body.protectedObject.id } },
+      role: { connect: { name: Rolekey.DRIVER } },
     },
   });
 
@@ -60,9 +68,24 @@ export const updateDriver = catchAsync(async (req, res, next) => {
 });
 
 export const deleteDriver = catchAsync(async (req, res, next) => {
+  if (!req.body.protectedObject?.driver?.id) {
+    return next(new AppError("You do not have a driver account", 400));
+  }
+
   await prisma.driver.delete({
     where: {
-      id: req.params.id,
+      id: req.body.protectedObject?.driver?.id,
+    },
+  });
+
+  await prisma.userRole.delete({
+    where: {
+      userId_roleId: {
+        roleId: req.body.protectedObject?.roles?.find(
+          (role: { role: { name: string } }) => role.role.name === Rolekey.DRIVER
+        )?.roleId,
+        userId: req.body.protectedObject.id,
+      },
     },
   });
 
