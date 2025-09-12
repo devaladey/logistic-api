@@ -14,6 +14,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// Beginning of the user, role, and permission models
+
 model User {
   id                          String         @id @default(uuid())
   name                        String
@@ -47,6 +51,7 @@ model RefreshToken {
   userId     String
   user       User     @relation(fields: [userId], references: [id])
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   expiresAt  DateTime
   revoked    Boolean  @default(false)
   device     String? // e.g. "iPhone 14 Pro", "Samsung Galaxy S22", "Web Chrome"
@@ -58,12 +63,12 @@ model RefreshToken {
 }
 
 model OtpToken {
-  id        String    @id @default(uuid())
+  id        String   @id @default(uuid())
   userId    String
-  user      User      @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   reason    String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   expiresAt DateTime
   token     String
 
@@ -74,24 +79,38 @@ model Profile {
   id     String @id @default(uuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Driver {
   id     String @id @default(uuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Quote     Quote[]
 }
 
 model Customer {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  id              String            @id @default(uuid())
+  userId          String            @unique
+  user            User              @relation(fields: [userId], references: [id])
+  requestForQuote RequestForQuote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Admin {
   id     String @id @default(uuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Role {
@@ -100,6 +119,9 @@ model Role {
   description String?
   users       UserRole[]
   permissions RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserRole {
@@ -108,6 +130,9 @@ model UserRole {
   userId String
   role   Role   @relation(fields: [roleId], references: [id])
   roleId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, roleId])
 }
@@ -119,6 +144,9 @@ model Permission {
   description String?
   module      String
   roles       RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model RolePermission {
@@ -128,7 +156,88 @@ model RolePermission {
   permission   Permission @relation(fields: [permissionId], references: [id])
   permissionId String
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([roleId, permissionId])
+}
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// Beginning of the location, request for quote, quote and booking models
+
+model Location {
+  id        String  @id @default(uuid())
+  address   String?
+  city      String?
+  state     String?
+  country   String?
+  latitude  Float
+  longitude Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pickupRequests  RequestForQuote[] @relation("PickupLocation")
+  dropoffRequests RequestForQuote[] @relation("DropoffLocation")
+}
+
+model RequestForQuote {
+  id               String    @id @default(uuid())
+  pickupTime       DateTime
+  pickupLocationId String
+  pickupLocation   Location  @relation("PickupLocation", fields: [pickupLocationId], references: [id])
+  dropLocationId   String
+  dropLocation     Location  @relation("DropoffLocation", fields: [dropLocationId], references: [id])
+  pickupDate       DateTime
+  status           RFQStatus @default(OPEN)
+  customerId       String
+  customer         Customer  @relation(fields: [customerId], references: [id])
+  quotes           Quote[] // one RFQ can have many quotes from drivers
+  package          Package[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Package {
+  id                String          @id @default(uuid())
+  description       String?
+  weight            Float?
+  dimensions        String? // e.g. "20x30x15 cm"
+  fragile           Boolean         @default(false)
+  requestForQuoteId String
+  requestForQuote   RequestForQuote @relation(fields: [requestForQuoteId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Quote {
+  id                String          @id @default(uuid())
+  price             Float
+  message           String?
+  requestForQuoteId String
+  requestForQuote   RequestForQuote @relation(fields: [requestForQuoteId], references: [id])
+  driver            Driver          @relation(fields: [driverId], references: [id])
+  driverId          String
+  status            QuoteStatus     @default(DRAFT)
+  estimatedTime     DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+enum QuoteStatus {
+  DRAFT
+  SAVED
+  ACCEPTED
+  EXPIRED
+}
+
+enum RFQStatus {
+  OPEN
+  CLOSED
+  CANCELLED
 }
 
 enum UserType {
