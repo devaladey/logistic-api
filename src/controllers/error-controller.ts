@@ -59,6 +59,14 @@ const handleNotFoundError = (err: any) => {
   return new AppError(`${modelName} not found`, 404);
 };
 
+const handleJwtTokenError = ()=> {
+  return new AppError(`Invalid token, please login again`, 401);
+}
+
+const handleTokenExpiredError = ()=> {
+  return new AppError(`Login token expired. Please log in again!`, 401);
+}
+
 export const errorController = (
   err: Error,
   req: Request,
@@ -70,7 +78,7 @@ export const errorController = (
   error.message = err.message;
   error.statusCode = err instanceof AppError ? err.statusCode : 500;
 
-  // console.log("This is the error: ", error);
+  console.log("This is the error: ", error);
 
   if ((err as Prisma.PrismaClientKnownRequestError)?.code === "P2002")
     error = handleDuplicateError(err);
@@ -78,6 +86,8 @@ export const errorController = (
     error = handleValidationError(err);
   if ((err as Prisma.PrismaClientKnownRequestError)?.code === "P2025")
     error = handleNotFoundError(err);
+  if(err.name === "JsonWebTokenError") error = handleJwtTokenError();
+  if(err.name === "TokenExpiredError") error = handleTokenExpiredError();
 
   sendError(res, {
     code: error.statusCode,

@@ -1,0 +1,653 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table User {
+  id String [pk]
+  name String [not null]
+  signupMethod SignupMethod [not null]
+  email String [unique]
+  phone String [unique]
+  passwordHash String
+  isActive Boolean [not null, default: true]
+  isVerified Boolean [not null, default: false]
+  profile Profile
+  roles UserRole [not null]
+  driver Driver
+  customer Customer
+  admin Admin
+  blogs Blog [not null]
+  googleId String
+  facebookId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  deletedAt DateTime
+  passwordChangedAt DateTime
+  jwtIssuedAt DateTime
+  passwordResetToken String
+  passwordResetTokenExpiresIn DateTime
+  refreshToken RefreshToken [not null]
+  otpToken OtpToken [not null]
+  userReviewsGiven Review [not null]
+  userReviewsReceived Review [not null]
+  blogComments BlogComment [not null]
+}
+
+Table RefreshToken {
+  id String [pk]
+  token String [unique, not null]
+  userId String [not null]
+  user User [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime
+  expiresAt DateTime [not null]
+  revoked Boolean [not null, default: false]
+  device String
+  ipAddress String
+  userAgent String [not null]
+  appVersion String
+
+  indexes {
+    (userId, userAgent) [unique]
+  }
+}
+
+Table OtpToken {
+  id String [pk]
+  userId String [not null]
+  user User [not null]
+  reason String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime
+  expiresAt DateTime [not null]
+  token String [not null]
+
+  indexes {
+    (userId, reason) [unique]
+  }
+}
+
+Table Profile {
+  id String [pk]
+  userId String [unique, not null]
+  user User [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime
+}
+
+Table Driver {
+  id String [pk]
+  userId String [unique, not null]
+  user User [not null]
+  booking Booking [not null]
+  vehicle Vehicle [not null]
+  trackingLogs TrackingUpdate [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  Quote Quote [not null]
+  assignedDrives AssignedDriver [not null]
+}
+
+Table Customer {
+  id String [pk]
+  userId String [unique, not null]
+  user User [not null]
+  requestForQuote RequestForQuote [not null]
+  booking Booking [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime
+}
+
+Table Admin {
+  id String [pk]
+  userId String [unique, not null]
+  user User [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table Role {
+  id String [pk]
+  name String [unique, not null]
+  description String
+  users UserRole [not null]
+  permissions RolePermission [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime
+}
+
+Table UserRole {
+  id String [pk]
+  user User [not null]
+  userId String [not null]
+  role Role [not null]
+  roleId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime
+
+  indexes {
+    (userId, roleId) [unique]
+  }
+}
+
+Table Permission {
+  id String [pk]
+  key String [unique, not null]
+  name String [not null]
+  description String
+  module String [not null]
+  roles RolePermission [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime
+}
+
+Table RolePermission {
+  id String [pk]
+  role Role [not null]
+  roleId String [not null]
+  permission Permission [not null]
+  permissionId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime
+
+  indexes {
+    (roleId, permissionId) [unique]
+  }
+}
+
+Table Location {
+  id String [pk]
+  address String
+  city String
+  state String
+  country String
+  latitude Float [not null]
+  longitude Float [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  pickupRequests RequestForQuote [not null]
+  dropoffRequests RequestForQuote [not null]
+}
+
+Table RequestForQuote {
+  id String [pk]
+  pickupTime DateTime [not null]
+  pickupLocationId String [not null]
+  pickupLocation Location [not null]
+  dropLocationId String [not null]
+  dropLocation Location [not null]
+  pickupDate DateTime [not null]
+  status RFQStatus [not null, default: 'OPEN']
+  customerId String [not null]
+  customer Customer [not null]
+  quotes Quote [not null]
+  package Package [not null]
+  dispatchMode DispatchMode [not null, default: 'BROADCAST']
+  assignedDrivers AssignedDriver [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table AssignedDriver {
+  id String [pk]
+  rfq RequestForQuote [not null]
+  rfqId String [not null]
+  driver Driver [not null]
+  driverId String [not null]
+  status AssignedStatus [not null, default: 'PENDING']
+}
+
+Table Package {
+  id String [pk]
+  description String
+  weight Float
+  dimensions String
+  fragile Boolean [not null, default: false]
+  requestForQuoteId String [not null]
+  requestForQuote RequestForQuote [not null]
+  status PackageStatus [not null, default: 'QUOTED']
+  BookingPackage BookingPackage [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table BookingPackage {
+  id String [pk]
+  description String
+  weight Float
+  dimensions String
+  fragile Boolean [not null, default: false]
+  originalPackage Package
+  originalPackageId String
+  bookingId String [unique, not null]
+  booking Booking [not null]
+  packageTrackingLogs PackageTrackingEvent [not null]
+}
+
+Table Quote {
+  id String [pk]
+  price Float [not null]
+  message String
+  requestForQuoteId String [not null]
+  requestForQuote RequestForQuote [not null]
+  driver Driver [not null]
+  driverId String [not null]
+  status QuoteStatus [not null, default: 'DRAFT']
+  booking Booking
+  estimatedTime DateTime
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table Booking {
+  id String [pk]
+  customerId String [not null]
+  customer Customer [not null]
+  driverId String [not null]
+  driver Driver [not null]
+  quoteId String [unique, not null]
+  quote Quote [not null]
+  vehicleId String
+  vehicle Vehicle
+  bookingPackage BookingPackage
+  status BookingStatus [not null, default: 'PENDING']
+  scheduledAt DateTime [not null]
+  invoice Invoice
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  paymentId String [not null]
+  Payment Payment
+  Cancellation Cancellation
+  trackingLogs TrackingUpdate [not null]
+  reviews Review [not null]
+  invoiceId String [not null]
+}
+
+Table TrackingUpdate {
+  id String [pk]
+  booking Booking [not null]
+  bookingId String [not null]
+  driver Driver [not null]
+  driverId String [not null]
+  latitude Float [not null]
+  longitude Float [not null]
+  timestamp DateTime [default: `now()`, not null]
+}
+
+Table Vehicle {
+  id String [pk]
+  driver Driver [not null]
+  driverId String [not null]
+  type VehicleType [not null]
+  plateNumber String [unique, not null]
+  make String
+  model String
+  year Int
+  color String
+  capacityKg Float
+  capacityVol Float
+  fuelType String
+  insuranceDoc String
+  regDoc String
+  roadWorthy Boolean [not null, default: false]
+  status VehicleStatus [not null, default: 'ACTIVE']
+  gpsEnabled Boolean [not null, default: false]
+  lastKnownLat Float
+  lastKnownLng Float
+  lastCheckIn DateTime
+  bookings Booking [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table Payment {
+  id String [pk]
+  bookingId String [unique, not null]
+  booking Booking [not null]
+  amount Float [not null]
+  currency String [not null]
+  method PaymentMethod [not null]
+  status PaymentStatus [not null, default: 'PENDING']
+  providerTxnId String
+  dueDate DateTime
+  paidAt DateTime
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  refund Refund [not null]
+  invoice Invoice [not null]
+  invoiceId String [not null]
+}
+
+Table Invoice {
+  id String [pk]
+  booking Booking [not null]
+  bookingId String [unique, not null]
+  amount Float [not null]
+  currency String [not null, default: 'USD']
+  status InvoiceStatus [not null, default: 'PENDING']
+  issuedAt DateTime [default: `now()`, not null]
+  dueDate DateTime
+  paidAt DateTime
+  payments Payment [not null]
+}
+
+Table Refund {
+  id String [pk]
+  paymentId String [not null]
+  payment Payment [not null]
+  amount Float [not null]
+  reason RefundReason [not null]
+  status RefundStatus [not null, default: 'PENDING']
+  providerTxnId String
+  processedAt DateTime
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table Cancellation {
+  id String [pk]
+  bookingId String [unique, not null]
+  reason String
+  createdAt DateTime [default: `now()`, not null]
+  booking Booking [not null]
+}
+
+Table PackageTrackingEvent {
+  id String [pk]
+  bookingPackage BookingPackage [not null]
+  bookingPackageId String [not null]
+  status BookingPackageStatus [not null]
+  lat Float
+  lng Float
+  timestamp DateTime [default: `now()`, not null]
+  note String
+}
+
+Table Review {
+  id String [pk]
+  rating Int [not null]
+  comment String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  reviewerId String [not null]
+  reviewer User [not null]
+  revieweeId String [not null]
+  reviewee User [not null]
+  bookingId String
+  booking Booking
+
+  indexes {
+    (bookingId, reviewerId, revieweeId) [unique]
+  }
+}
+
+Table Blog {
+  id String [pk]
+  title String [not null]
+  slug String [unique, not null]
+  content String [not null]
+  publishedAt DateTime
+  authorId String [not null]
+  author User [not null]
+  categoryId String
+  category BlogCategory
+  tags BlogTag [not null]
+  translations BlogTranslation [not null]
+  comments BlogComment [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table BlogCategory {
+  id String [pk]
+  name String [unique, not null]
+  blogs Blog [not null]
+}
+
+Table BlogTag {
+  id String [pk]
+  name String [unique, not null]
+  blogs Blog [not null]
+}
+
+Table BlogTranslation {
+  id String [pk]
+  blogId String [not null]
+  blog Blog [not null]
+  language String [not null]
+  title String [not null]
+  content String [not null]
+}
+
+Table BlogComment {
+  id String [pk]
+  blogId String [not null]
+  blog Blog [not null]
+  authorId String [not null]
+  author User [not null]
+  content String [not null]
+  parentId String
+  parent BlogComment
+  replies BlogComment [not null]
+  createdAt DateTime [default: `now()`, not null]
+}
+
+Table BlogTagsOnBlog {
+  tagsId String [ref: > BlogTag.id]
+  blogsId String [ref: > Blog.id]
+}
+
+Enum AssignedStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+Enum DispatchMode {
+  BROADCAST
+  TARGETED
+}
+
+Enum InvoiceStatus {
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  CANCELLED
+}
+
+Enum BookingPackageStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  AT_WAREHOUSE
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RETURNED
+  LOST
+}
+
+Enum RefundReason {
+  CUSTOMER_CANCELLATION
+  PROVIDER_CANCELLATION
+  SERVICE_ISSUE
+  PARTIAL_REFUND
+  OTHER
+}
+
+Enum RefundStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+Enum PaymentMethod {
+  CARD
+  PAYPAL
+  SEPA
+  KLARNA
+  APPLE_PAY
+  GOOGLE_PAY
+  INVOICE
+  CASH
+}
+
+Enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+  OVERDUE
+}
+
+Enum VehicleStatus {
+  ACTIVE
+  INACTIVE
+  UNDER_MAINTENANCE
+  BLOCKED
+}
+
+Enum VehicleType {
+  BIKE
+  CAR
+  VAN
+  TRUCK
+  BICYCLE
+  LORRY
+}
+
+Enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+  DRIVER_ASSIGNED
+  PICKED_UP
+  FAILED
+}
+
+Enum PackageStatus {
+  PENDING
+  QUOTED
+  BOOKED
+  IN_TRANSIT
+  DELIVERED
+  DAMAGED
+  LOST
+  CANCELED
+}
+
+Enum QuoteStatus {
+  DRAFT
+  SAVED
+  ACCEPTED
+  EXPIRED
+}
+
+Enum RFQStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+Enum UserType {
+  CUSTOMER
+  DRIVER
+  ADMIN
+}
+
+Enum CustomerType {
+  B2C
+  B2B
+  STUDENT
+}
+
+Enum SignupMethod {
+  NORMAL
+  GOOGLE
+  APPLE
+}
+
+Ref: RefreshToken.userId > User.id
+
+Ref: OtpToken.userId > User.id
+
+Ref: Profile.userId - User.id
+
+Ref: Driver.userId - User.id
+
+Ref: Customer.userId - User.id
+
+Ref: Admin.userId - User.id
+
+Ref: UserRole.userId > User.id
+
+Ref: UserRole.roleId > Role.id
+
+Ref: RolePermission.roleId > Role.id
+
+Ref: RolePermission.permissionId > Permission.id
+
+Ref: RequestForQuote.pickupLocationId > Location.id
+
+Ref: RequestForQuote.dropLocationId > Location.id
+
+Ref: RequestForQuote.customerId > Customer.id
+
+Ref: AssignedDriver.rfqId > RequestForQuote.id
+
+Ref: AssignedDriver.driverId > Driver.id
+
+Ref: Package.requestForQuoteId > RequestForQuote.id
+
+Ref: BookingPackage.originalPackageId > Package.id
+
+Ref: BookingPackage.bookingId - Booking.id
+
+Ref: Quote.requestForQuoteId > RequestForQuote.id
+
+Ref: Quote.driverId > Driver.id
+
+Ref: Booking.customerId > Customer.id
+
+Ref: Booking.driverId > Driver.id
+
+Ref: Booking.quoteId - Quote.id
+
+Ref: Booking.vehicleId > Vehicle.id
+
+Ref: TrackingUpdate.bookingId > Booking.id
+
+Ref: TrackingUpdate.driverId > Driver.id
+
+Ref: Vehicle.driverId > Driver.id
+
+Ref: Payment.bookingId - Booking.id
+
+Ref: Payment.invoiceId > Invoice.id
+
+Ref: Invoice.bookingId - Booking.id
+
+Ref: Refund.paymentId > Payment.id
+
+Ref: Cancellation.bookingId - Booking.id
+
+Ref: PackageTrackingEvent.bookingPackageId > BookingPackage.id
+
+Ref: Review.reviewerId > User.id
+
+Ref: Review.revieweeId > User.id
+
+Ref: Review.bookingId > Booking.id
+
+Ref: Blog.authorId > User.id
+
+Ref: Blog.categoryId > BlogCategory.id
+
+Ref: BlogTranslation.blogId > Blog.id
+
+Ref: BlogComment.blogId > Blog.id
+
+Ref: BlogComment.authorId > User.id
+
+Ref: BlogComment.parentId - BlogComment.id
