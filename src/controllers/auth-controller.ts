@@ -251,9 +251,8 @@ export const protect = catchAsync(async (req: Request, res, next) => {
     return next(new AppError("User recently required a new token", 401));
   }
 
+  req.body = req.body || {};
   req.body.protectedObject = user;
-
-  // req.user = user;
 
   next();
 });
@@ -268,7 +267,6 @@ export const restrictTo = (requiredPermissions: string | string[]) => {
         }
       );
     });
-
 
     const restrictedPermission = Array.isArray(requiredPermissions)
       ? requiredPermissions

@@ -167,6 +167,10 @@ Table Location {
   updatedAt DateTime [not null]
   pickupRequests RequestForQuote [not null]
   dropoffRequests RequestForQuote [not null]
+
+  indexes {
+    (latitude, longitude) [unique]
+  }
 }
 
 Table RequestForQuote {

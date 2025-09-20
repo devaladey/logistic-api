@@ -193,6 +193,8 @@ model Location {
 
   pickupRequests  RequestForQuote[] @relation("PickupLocation")
   dropoffRequests RequestForQuote[] @relation("DropoffLocation")
+
+  @@unique([latitude, longitude])
 }
 
 model RequestForQuote {

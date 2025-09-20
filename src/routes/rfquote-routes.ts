@@ -8,16 +8,21 @@ import {
   getCustomerRFQs,
   getRequestForQuoteById,
   respondToInvitation,
+  updateRequestForQuote,
   updateRFQStatus,
 } from "../controllers/rfquote-controller";
+import { protect } from "../controllers/auth-controller";
 
 const router = express.Router();
 
+
+
 // These routes are for the customers
-router.post("/", createRequestForQuotes);
+router.post("/customer", protect, createRequestForQuotes);
 router.get("/customer", getCustomerRFQs);
-router.patch("/:id/cancel", cancelRFQ);
-router.get("/:id", getRequestForQuoteById);
+router.patch("/customer/:id/customer_cancel", cancelRFQ);
+router.get("/customer/:id", protect, getRequestForQuoteById);
+router.patch("/customer/:id", protect, updateRequestForQuote);
 
 // These routes are for the admin
 router.get("/admin/all", getAllRequestsForQuotes);
@@ -25,7 +30,7 @@ router.patch("/admin/:id/status", updateRFQStatus);
 router.patch("/admin/:id", deleteRequestForQuote);
 
 // These routes are for the drivers
-router.get("/available", getAvailableRFQs);
-router.patch("/:id/respond", respondToInvitation);
+router.get("/driver/available", getAvailableRFQs);
+router.patch("driver/:id/respond", respondToInvitation);
 
 export default router;
